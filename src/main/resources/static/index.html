@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 7 - VueJS + Axios + Spring Boot</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<main id="app" class="container">
+    <h1>Lab 7 - VueJS + Axios + REST API</h1>
+
+    <div class="tabs">
+        <button :class="{active: activeTab === 'categories'}" @click="activeTab = 'categories'">Bai 1 - Loai hang</button>
+        <button :class="{active: activeTab === 'products'}" @click="activeTab = 'products'">Bai 2 - San pham</button>
+        <button :class="{active: activeTab === 'users'}" @click="activeTab = 'users'">Bai 3 - Nguoi dung</button>
+    </div>
+
+    <p v-if="successMessage" class="message success">{{ successMessage }}</p>
+    <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
+
+    <section v-show="activeTab === 'categories'" class="panel">
+        <h2>Quan ly loai hang</h2>
+        <form class="form-grid" @submit.prevent="saveCategory">
+            <label>
+                Ma loai
+                <input v-model.trim="categoryForm.id" :readonly="editingCategory" required>
+            </label>
+            <label>
+                Ten loai
+                <input v-model.trim="categoryForm.name" required>
+            </label>
+            <div class="form-actions">
+                <button type="submit">{{ editingCategory ? 'Cap nhat' : 'Them moi' }}</button>
+                <button type="button" class="secondary" @click="resetCategoryForm">Lam moi</button>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Ma</th>
+                <th>Ten</th>
+                <th>Thao tac</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="category in categories" :key="category.id">
+                <td>{{ category.id }}</td>
+                <td>{{ category.name }}</td>
+                <td>
+                    <button @click="editCategory(category)">Sua</button>
+                    <button class="danger" @click="deleteCategory(category.id)">Xoa</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section v-show="activeTab === 'products'" class="panel">
+        <h2>Quan ly san pham</h2>
+        <form class="form-grid" @submit.prevent="saveProduct">
+            <label>
+                Ma san pham
+                <input v-model.trim="productForm.id" :readonly="editingProduct" required>
+            </label>
+            <label>
+                Ten san pham
+                <input v-model.trim="productForm.name" required>
+            </label>
+            <label>
+                Gia
+                <input v-model.number="productForm.price" type="number" min="0" step="0.01" required>
+            </label>
+            <label>
+                Ngay nhap
+                <input v-model="productForm.date" type="date" required>
+            </label>
+            <label>
+                Loai hang
+                <select v-model="productForm.categoryId" required>
+                    <option value="" disabled>-- Chon loai --</option>
+                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                        {{ category.id }} - {{ category.name }}
+                    </option>
+                </select>
+            </label>
+            <div class="form-actions">
+                <button type="submit">{{ editingProduct ? 'Cap nhat' : 'Them moi' }}</button>
+                <button type="button" class="secondary" @click="resetProductForm">Lam moi</button>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Ma</th>
+                <th>Ten</th>
+                <th>Gia</th>
+                <th>Ngay nhap</th>
+                <th>Loai</th>
+                <th>Thao tac</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="product in products" :key="product.id">
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ Number(product.price).toLocaleString('vi-VN') }}</td>
+                <td>{{ product.date }}</td>
+                <td>{{ product.categoryId }} - {{ product.categoryName }}</td>
+                <td>
+                    <button @click="editProduct(product)">Sua</button>
+                    <button class="danger" @click="deleteProduct(product.id)">Xoa</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section v-show="activeTab === 'users'" class="panel">
+        <h2>Quan ly nguoi dung</h2>
+        <form class="form-grid" @submit.prevent="saveUser">
+            <label>
+                Username
+                <input v-model.trim="userForm.username" :readonly="editingUser" required>
+            </label>
+            <label>
+                Password
+                <input v-model.trim="userForm.password" required>
+            </label>
+            <label>
+                Ho va ten
+                <input v-model.trim="userForm.fullname" required>
+            </label>
+            <label>
+                Vai tro
+                <select v-model="userForm.role" required>
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </label>
+            <label class="checkbox">
+                <input v-model="userForm.enabled" type="checkbox">
+                Kich hoat tai khoan
+            </label>
+            <div class="form-actions">
+                <button type="submit">{{ editingUser ? 'Cap nhat' : 'Them moi' }}</button>
+                <button type="button" class="secondary" @click="resetUserForm">Lam moi</button>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Ho ten</th>
+                <th>Trang thai</th>
+                <th>Vai tro</th>
+                <th>Thao tac</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="user in users" :key="user.username">
+                <td>{{ user.username }}</td>
+                <td>{{ user.password }}</td>
+                <td>{{ user.fullname }}</td>
+                <td>{{ user.enabled ? 'Enabled' : 'Disabled' }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                    <button @click="editUser(user)">Sua</button>
+                    <button class="danger" @click="deleteUser(user.username)">Xoa</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
+
